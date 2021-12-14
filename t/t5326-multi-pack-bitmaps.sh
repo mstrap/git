@@ -9,6 +9,11 @@ test_description='exercise basic multi-pack bitmap functionality'
 GIT_TEST_MULTI_PACK_INDEX=0
 GIT_TEST_MULTI_PACK_INDEX_WRITE_BITMAP=0
 
+GIT_TEST_MIDX_WRITE_REV=0
+GIT_TEST_MIDX_READ_RIDX=1
+export GIT_TEST_MIDX_WRITE_REV
+export GIT_TEST_MIDX_READ_RIDX
+
 midx_bitmap_core
 
 bitmap_reuse_tests() {
