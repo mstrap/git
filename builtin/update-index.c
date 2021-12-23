@@ -787,12 +787,17 @@ static int refresh(struct refresh_params *o, unsigned int flag)
 	setup_work_tree();
 	read_cache();
 	*o->has_errors |= refresh_cache(o->flags | flag);
-	if (has_racy_timestamp(&the_index)) {
-		/* For racy timestamps we should set active_cache_changed immediately:
-		 * other callbacks may follow for which some of them may reset
-		 * active_cache_changed. */
+	int racyTimestamp = has_racy_timestamp(&the_index);
+	if (*o->has_errors)
+		active_cache_changed = 0;
+	else if (racyTimestamp)
+		/*
+		 * Even if nothing else has changed, updating the file
+		 * increases the chance that racy timestamps become
+		 * non-racy, helping future run-time performance.
+		 */
 		active_cache_changed |= SOMETHING_CHANGED;
-	}
+
 	return 0;
 }
 
