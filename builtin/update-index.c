@@ -36,6 +36,7 @@ static int mark_valid_only;
 static int mark_skip_worktree_only;
 static int mark_fsmonitor_only;
 static int ignore_skip_worktree_entries;
+static int block_cache_write;
 #define MARK_FLAG 1
 #define UNMARK_FLAG 2
 static struct strbuf mtime_dir = STRBUF_INIT;
@@ -923,7 +924,7 @@ static enum parse_opt_result unresolve_callback(
 	*has_errors = do_unresolve(ctx->argc, ctx->argv,
 				prefix, prefix ? strlen(prefix) : 0);
 	if (*has_errors)
-		active_cache_changed = 0;
+		block_cache_write = 1;
 
 	ctx->argv += ctx->argc - 1;
 	ctx->argc = 1;
@@ -944,7 +945,7 @@ static enum parse_opt_result reupdate_callback(
 	setup_work_tree();
 	*has_errors = do_reupdate(ctx->argc, ctx->argv, prefix);
 	if (*has_errors)
-		active_cache_changed = 0;
+		block_cache_write = 1;
 
 	ctx->argv += ctx->argc - 1;
 	ctx->argc = 1;
@@ -1229,7 +1230,8 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 		report(_("fsmonitor disabled"));
 	}
 
-	if (active_cache_changed || force_write) {
+	if ((active_cache_changed && !block_cache_write) ||
+	    force_write) {
 		if (newfd < 0) {
 			if (refresh_args.flags & REFRESH_QUIET)
 				exit(128);
