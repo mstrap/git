@@ -39,6 +39,7 @@ static int ignore_skip_worktree_entries;
 #define MARK_FLAG 1
 #define UNMARK_FLAG 2
 static struct strbuf mtime_dir = STRBUF_INIT;
+static int disallow_cache_write;
 
 /* Untracked cache mode */
 enum uc_mode {
@@ -923,7 +924,7 @@ static enum parse_opt_result unresolve_callback(
 	*has_errors = do_unresolve(ctx->argc, ctx->argv,
 				prefix, prefix ? strlen(prefix) : 0);
 	if (*has_errors)
-		active_cache_changed = 0;
+		disallow_cache_write = 1;
 
 	ctx->argv += ctx->argc - 1;
 	ctx->argc = 1;
@@ -944,7 +945,7 @@ static enum parse_opt_result reupdate_callback(
 	setup_work_tree();
 	*has_errors = do_reupdate(ctx->argc, ctx->argv, prefix);
 	if (*has_errors)
-		active_cache_changed = 0;
+		disallow_cache_write = 1;
 
 	ctx->argv += ctx->argc - 1;
 	ctx->argc = 1;
@@ -1074,6 +1075,8 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(update_index_usage, options);
+
+	disallow_cache_write = 0;
 
 	git_config(git_default_config, NULL);
 
@@ -1229,7 +1232,8 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 		report(_("fsmonitor disabled"));
 	}
 
-	if (active_cache_changed || force_write) {
+	if ((active_cache_changed && !disallow_cache_write) ||
+	    force_write) {
 		if (newfd < 0) {
 			if (refresh_args.flags & REFRESH_QUIET)
 				exit(128);

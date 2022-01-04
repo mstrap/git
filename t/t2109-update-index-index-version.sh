@@ -47,4 +47,22 @@ test_expect_success 'v4->v2 does change index' '
 	test "$(test-tool index-version < .git/index)" = 2
 '
 
+test_expect_success 'v2->v4 does not change index if --unresolve gives error' '
+	echo $PWD &&
+	git branch m &&
+	git checkout -b b &&
+	echo content1 >file &&
+	git add file &&
+	git commit -m "branch change" &&
+
+	git checkout m &&
+	echo content2 >file &&
+	git add file &&
+	git commit -m "master change" &&
+
+	test_must_fail git merge b &&
+	test_must_fail git update-index --index-version 4 --unresolve foo &&
+	test "$(test-tool index-version < .git/index)" = 2
+'
+
 test_done
