@@ -216,7 +216,7 @@ do
 			GIT_TRACE2_EVENT="$D/rebased-push-event" \
 			git -c push.useBitmaps=false push $push_args
 		) &&
-		grep_wrote 3 rebased-push-event # 1 commit, 1 tree, 1 blob
+		grep_wrote 2 rebased-push-event # 1 commit, 1 tree
 	'
 done
 
